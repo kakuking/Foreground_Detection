@@ -97,11 +97,8 @@ def eval_model(model, X_test, Y_test):
     predicted_mask = model.predict(sample_ip)
     
     op_img = predicted_mask.squeeze()
-    
     op_eq = exposure.equalize_hist(op_img)
     
-    print(predicted_mask.shape)
-
     plt.figure(figsize=(12, 8))
     
     plt.subplot(2, 2, 1)
@@ -119,7 +116,6 @@ def eval_model(model, X_test, Y_test):
     plt.subplot(2, 2, 4)
     plt.title('Predicted Mask Contrasted')
     plt.imshow(op_eq, cmap='gray')
-    
     
     plt.show()
 
