@@ -10,6 +10,7 @@ from keras import layers
 import keras.backend as K
 
 from skimage import exposure
+from tqdm import tqdm
 
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -86,19 +87,20 @@ def train_model(model, X_train, Y_train, X_val, Y_val, num_epochs, batch_size):
     model.save("./Models/model_Vtemp_V2.keras")
     return model
 
-def eval_model(model, X_test, Y_test):
+def eval_model(model, X_test, Y_test, idx):
 
-    loss = model.evaluate(X_test, Y_test)
+    loss = model.evaluate(X_test, Y_test, verbose=0)
     print(f"Test Lost: {loss}")
     
-    sample_index = random.randint(0, len(X_test))
+    sample_index = random.randint(0, len(X_test)) if idx == -1 else idx
     # sample_index = 5
     sample_ip = np.expand_dims(X_test[sample_index], axis=0)
-    predicted_mask = model.predict(sample_ip)
+    predicted_mask = model.predict(sample_ip, verbose=0)
     
     op_img = predicted_mask.squeeze()
     op_eq = exposure.equalize_hist(op_img)
     
+    plt.clf()
     plt.figure(figsize=(12, 8))
     
     plt.subplot(2, 2, 1)
@@ -117,7 +119,9 @@ def eval_model(model, X_test, Y_test):
     plt.title('Predicted Mask Contrasted')
     plt.imshow(op_eq, cmap='gray')
     
-    plt.show()
+    plt.savefig(f"./SS/{idx}.jpg")
+    if(idx == -1):
+        plt.show()
 
 TRAIN_RATIO = 0.7
 VAL_RATIO = 0.2
@@ -126,6 +130,7 @@ TEST_RATIO = 0.1
 X_data = np.load("X_data.npy")[470:]
 Y_data = np.load("Y_data.npy")[470:]
 
+print(X_data.shape)
 
 X_train, X_temp, Y_train, Y_temp = train_test_split(X_data, Y_data, test_size=TEST_RATIO + VAL_RATIO, random_state=42)    # the Ultimate Question of Life, the Universe, and Everything
 X_val, X_test, Y_val, Y_test = train_test_split(X_temp, Y_temp, test_size=TEST_RATIO/(TEST_RATIO + VAL_RATIO), random_state=42)
@@ -139,4 +144,5 @@ input_shape = (X_train.shape[1], X_train.shape[2], X_train.shape[3])
 
 model = load_model("./Models/model_Vtemp_V2.keras")
 
-eval_model(model, X_data, Y_data)
+for i in tqdm(range(0, 1000, 200)):
+    eval_model(model, X_data, Y_data, i)
