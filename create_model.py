@@ -22,26 +22,12 @@ def iou_loss(y_true, y_pred):
     iou = K.mean((intersection + K.epsilon()) / (union + K.epsilon()))
     return 1 - iou  # IoU loss is often used as 1 - IoU for minimization
 
-'''def create_model(ip_shape):
-    # inputs = Input(shape=ip_shape)
+def load_mod():
+    return load_model("./Models/model_Vtemp_V2.keras")
 
-    model = models.Sequential()
-
-    model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), input_shape=ip_shape, padding='same'))
-    model.add(layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=ip_shape, padding='same'))
-    model.add(layers.Conv2D(filters=1, kernel_size=(3, 3), input_shape=ip_shape, padding='same'))
-    model.add(layers.BatchNormalization())
-
-    # Add more ConvLSTM layers as needed
-
-    # model.add(layers.Conv3D(filters=1, kernel_size=(3, 3, 3), activation='sigmoid', padding='same'))
-
-    # Compile the model
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    
+def print_model_summary(model):
+    model = load_model("./Models/model_V2_2.keras")
     model.summary()
-    
-    return model'''
 
 def create_model(ip_shape):
     inputs = Input(shape=ip_shape)
@@ -88,14 +74,15 @@ def train_model(model, X_train, Y_train, X_val, Y_val, num_epochs, batch_size):
     return model
 
 def eval_model(model, X_test, Y_test, idx):
-
-    loss = model.evaluate(X_test, Y_test, verbose=0)
+    print_model_summary(model)
+        
+    loss = model.evaluate(X_test, Y_test, verbose=2)
     print(f"Test Lost: {loss}")
     
     sample_index = random.randint(0, len(X_test)) if idx == -1 else idx
     # sample_index = 5
     sample_ip = np.expand_dims(X_test[sample_index], axis=0)
-    predicted_mask = model.predict(sample_ip, verbose=0)
+    predicted_mask = model.predict(sample_ip, verbose=2)
     
     op_img = predicted_mask.squeeze()
     op_eq = exposure.equalize_hist(op_img)
@@ -142,7 +129,9 @@ input_shape = (X_train.shape[1], X_train.shape[2], X_train.shape[3])
 # model = create_model(input_shape)
 # model = train_model(model, X_train, Y_train, X_val, Y_val, 40, 8)
 
-model = load_model("./Models/model_Vtemp_V2.keras")
+model = load_mod()
 
-for i in tqdm(range(0, 1000, 200)):
-    eval_model(model, X_data, Y_data, i)
+eval_model(model, X_data, Y_data, -1)
+
+# for i in tqdm(range(0, 1000, 200)):
+#     eval_model(model, X_data, Y_data, i)
